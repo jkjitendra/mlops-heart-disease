@@ -7,3 +7,6 @@ scikit-learn>=1.5,<2
 
 # Interactive notebooks
 jupyterlab>=4,<5
+
+# Experiment tracking
+mlflow>=3,<4
