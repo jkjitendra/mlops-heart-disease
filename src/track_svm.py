@@ -8,7 +8,7 @@ def main():
     track_cv_run(
         model_name="SVC",
         model=build_svm_model(),
-        run_name="svm-rbf-baseline-corrected",
+        run_name="svm-rbf-baseline",
         stage="baseline",
     )
 
