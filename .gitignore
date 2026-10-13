@@ -1,0 +1,45 @@
+# Python environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing and linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# MLflow local tracking
+mlruns/
+mlartifacts/
+mlflow.db
+mlflow.db-*
+
+# Secrets and environment variables
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# IDE
+.idea/
+.vscode/
+
+# Temporary files
+*.log
+*.tmp
