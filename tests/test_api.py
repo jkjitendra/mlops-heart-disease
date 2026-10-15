@@ -366,3 +366,43 @@ def test_ready_when_model_loaded(client):
         "model_loaded": True,
         "model_version": "1",
     }
+
+
+def test_mlflow_tracking_uri_environment_override(
+    monkeypatch,
+    fake_model,
+):
+    """An environment variable overrides the local MLflow URI."""
+
+    test_uri = "http://mlflow:5050"
+
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", test_uri)
+
+    champion = SimpleNamespace(
+        version="1",
+        status="READY",
+        run_id="test-run-id",
+    )
+
+    with (
+        patch("src.api.MlflowClient") as client_class,
+        patch("src.api.mlflow.set_tracking_uri") as set_uri,
+        patch(
+            "src.api.mlflow.sklearn.load_model",
+            return_value=fake_model,
+        ),
+    ):
+        client_class.return_value.get_model_version_by_alias.return_value = (
+            champion
+        )
+
+        with TestClient(app) as test_client:
+            response = test_client.get("/ready")
+
+            assert response.status_code == 200
+
+        set_uri.assert_called_once_with(test_uri)
+
+        client_class.assert_called_once_with(
+            tracking_uri=test_uri
+        )

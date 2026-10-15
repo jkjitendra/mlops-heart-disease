@@ -1,6 +1,7 @@
 """FastAPI service for the heart disease classifier."""
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 import mlflow
@@ -12,7 +13,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.experiment_tracking import TRACKING_URI
+TRACKING_URI = "http://127.0.0.1:5050"
 
 
 MODEL_NAME = "heart-disease-classifier"
@@ -30,9 +31,14 @@ async def lifespan(app: FastAPI):
     app.state.model_info = None
 
     try:
-        mlflow.set_tracking_uri(TRACKING_URI)
+        tracking_uri = os.getenv(
+            "MLFLOW_TRACKING_URI",
+            TRACKING_URI,
+        )
 
-        client = MlflowClient(tracking_uri=TRACKING_URI)
+        mlflow.set_tracking_uri(tracking_uri)
+
+        client = MlflowClient(tracking_uri=tracking_uri)
 
         # Find the version currently assigned to champion.
         champion = client.get_model_version_by_alias(
