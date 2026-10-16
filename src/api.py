@@ -12,6 +12,7 @@ from typing import Literal
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
+from src.monitoring import RequestMetrics, install_monitoring
 
 TRACKING_URI = "http://127.0.0.1:5050"
 
@@ -29,6 +30,7 @@ async def lifespan(app: FastAPI):
 
     app.state.model = None
     app.state.model_info = None
+    app.state.request_metrics = RequestMetrics()
 
     try:
         tracking_uri = os.getenv(
@@ -103,6 +105,9 @@ app = FastAPI(
     version="0.6.0",
     lifespan=lifespan,
 )
+
+
+install_monitoring(app)
 
 
 @app.get("/health")

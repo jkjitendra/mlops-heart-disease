@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: heart-disease-api:0.1
+          image: heart-disease-api:0.2
           imagePullPolicy: Never
           ports:
             - containerPort: 8000

@@ -8,7 +8,7 @@ COPY requirements-serving.txt .
 
 RUN python -m pip install --no-cache-dir -r requirements-serving.txt
 
-COPY src/api.py ./src/api.py
+COPY src/api.py src/monitoring.py ./src/
 
 RUN useradd --create-home --uid 10001 appuser
 

@@ -6,3 +6,4 @@
 !requirements-serving.txt
 !src/
 !src/api.py
+!src/monitoring.py

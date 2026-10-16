@@ -406,3 +406,72 @@ def test_mlflow_tracking_uri_environment_override(
         client_class.assert_called_once_with(
             tracking_uri=test_uri
         )
+
+
+def test_metrics_initial_state(client):
+    """New application sessions start with empty request metrics."""
+
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+
+    metrics = response.json()
+
+    assert metrics["prediction_requests_total"] == 0
+    assert metrics["successful_requests"] == 0
+    assert metrics["client_errors_4xx"] == 0
+    assert metrics["server_errors_5xx"] == 0
+    assert metrics["average_latency_ms"] == 0.0
+    assert metrics["p95_latency_ms"] == 0.0
+    assert metrics["latency_sample_count"] == 0
+
+
+def test_metrics_track_valid_and_invalid_predictions(client):
+    """Monitor successful predictions and validation errors."""
+
+    valid_response = client.post(
+        "/predict",
+        json=VALID_PATIENT,
+    )
+
+    assert valid_response.status_code == 200
+
+    invalid_patient = VALID_PATIENT.copy()
+    del invalid_patient["age"]
+
+    invalid_response = client.post(
+        "/predict",
+        json=invalid_patient,
+    )
+
+    assert invalid_response.status_code == 422
+
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+
+    metrics = response.json()
+
+    assert metrics["prediction_requests_total"] == 2
+    assert metrics["successful_requests"] == 1
+    assert metrics["client_errors_4xx"] == 1
+    assert metrics["server_errors_5xx"] == 0
+    assert metrics["latency_sample_count"] == 2
+
+    assert metrics["average_latency_ms"] >= 0
+    assert metrics["p95_latency_ms"] >= 0
+
+
+def test_monitor_dashboard(client):
+    """Monitoring dashboard is accessible as HTML."""
+
+    response = client.get("/monitor")
+
+    assert response.status_code == 200
+
+    assert "text/html" in response.headers["content-type"]
+
+    assert "Heart Disease Prediction API" in response.text
+    assert "Prediction requests" in response.text
+    assert "p95 latency" in response.text
+    assert 'fetch("/metrics"' in response.text
