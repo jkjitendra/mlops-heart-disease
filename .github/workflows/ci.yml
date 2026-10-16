@@ -27,14 +27,51 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements-serving.txt pytest==9.1.1 httpx==0.28.1
+          python -m pip install -r requirements-serving.txt pytest==9.1.1 httpx==0.28.1 ruff==0.13.3
+
+      - name: Check Python linting
+        run: python -m ruff check src tests scripts
 
       - name: Run automated tests
         run: python -m pytest -q
 
+  model-training:
+    name: Model Training
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install training dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-serving.txt
+
+      - name: Train and evaluate models
+        run: |
+          mkdir -p reports/ci
+          set -o pipefail
+          python -m src.train 2>&1 | tee reports/ci/model-training.log
+
+      - name: Upload training results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-training-results
+          path: reports/ci/model-training.log
+          if-no-files-found: warn
+
   docker-build:
     name: Docker Build
-    needs: tests
+    needs: model-training
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
