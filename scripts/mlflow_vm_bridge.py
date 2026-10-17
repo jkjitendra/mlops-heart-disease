@@ -1,9 +1,10 @@
 """Private HTTP bridge from Minikube to the local MLflow server."""
 
+import os
 from http.client import HTTPConnection
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-BRIDGE_HOST = "192.168.49.1"
+BRIDGE_HOST = os.environ.get("MLFLOW_BRIDGE_HOST", "192.168.49.1")
 BRIDGE_PORT = 5051
 MLFLOW_HOST = "127.0.0.1"
 MLFLOW_PORT = 5050
