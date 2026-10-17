@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: heart-disease
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heart-disease-api
+  namespace: heart-disease
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: heart-disease-api
+  template:
+    metadata:
+      labels:
+        app: heart-disease-api
+    spec:
+      containers:
+        - name: api
+          image: heart-disease-api:0.2
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MLFLOW_TRACKING_URI
+              value: "http://192.168.49.1:5051"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "750m"
+              memory: "1Gi"
+          startupProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            periodSeconds: 5
+            failureThreshold: 24
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 20
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            periodSeconds: 10
+            timeoutSeconds: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: heart-disease-api
+  namespace: heart-disease
+spec:
+  type: ClusterIP
+  selector:
+    app: heart-disease-api
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: heart-disease-api-lb
+  namespace: heart-disease
+spec:
+  type: LoadBalancer
+  selector:
+    app: heart-disease-api
+  ports:
+    - name: http
+      port: 8088
+      targetPort: 8000
+      protocol: TCP
